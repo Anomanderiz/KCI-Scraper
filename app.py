@@ -249,7 +249,7 @@ st.title("💸 KCI Major Gift Scraper")
 st.markdown("""
 <div style='background-color: #000000; padding: 15px; border-radius: 8px; border-left: 5px solid #CC0633; color: white;'>
 This tool scrapes <b>Major Gift News</b> from <i>KCI Philanthropy</i>. 
-It paginates through the listing and extracts details into an Excel sheet.
+It paginates through the articles and extracts details into an Excel sheet.
 </div>
 <br>
 """, unsafe_allow_html=True)
