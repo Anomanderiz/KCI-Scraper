@@ -31,58 +31,83 @@ st.set_page_config(
 def local_css():
     st.markdown("""
         <style>
-        /* Main Background and Text */
+        /* GLOBAL FONTS */
         .stApp {
-            background-color: #0E1117; /* Very dark canvas to let the red pop */
-            color: #FFFFFF;
             font-family: 'Helvetica Neue', sans-serif;
         }
-        
-        /* Sidebar Styling */
+
+        /* SIDEBAR styling overrides */
         [data-testid="stSidebar"] {
-            background-color: #A6192E; /* Secondary Red */
-        }
-        [data-testid="stSidebar"] .css-17lntkn {
-            color: #FFFFFF;
+            background-color: #CC0633 !important; /* Primary Red */
+            border-right: 2px solid #000000;
         }
         
-        /* Titles and Headers */
-        h1, h2, h3 {
-            color: #CC0633 !important; /* Primary Red */
-            font-weight: 700;
+        /* MAIN AREA styling overrides */
+        .stApp > header {
+            background-color: transparent;
         }
         
-        /* Buttons */
-        .stButton>button {
+        /* HEADERS */
+        h1, h2, h3, h4, h5, h6 {
+            color: #FFFFFF !important;
+            text-shadow: 2px 2px 0px #000000; /* Black shadow for clarity */
+            font-weight: 800;
+        }
+        
+        /* TABLES / DATAFRAMES */
+        [data-testid="stDataFrame"] {
+            background-color: #CC0633 !important; /* Primary Red */
+            border: 2px solid #000000;
+            border-radius: 5px;
+            padding: 5px;
+        }
+        [data-testid="stDataFrame"] div[role="grid"] {
             background-color: #CC0633;
             color: white;
+        }
+        
+        /* BUTTONS */
+        .stButton>button {
+            background-color: #000000; /* Black for clarity */
+            color: #CC0633; /* Primary Red text */
+            border: 2px solid #FFFFFF;
             border-radius: 8px;
-            border: none;
             font-weight: bold;
             transition: all 0.3s ease;
         }
         .stButton>button:hover {
             background-color: #FFFFFF;
             color: #CC0633;
-            border: 2px solid #CC0633;
-            transform: scale(1.02);
+            border-color: #000000;
+            box-shadow: 0 0 10px #000000;
         }
 
-        /* Dataframes */
-        [data-testid="stDataFrame"] {
-            border: 1px solid #A6192E;
+        /* INPUT FIELDS (Text inputs, Number inputs) */
+        /* Make them Black so they are readable against the Red */
+        .stTextInput>div>div>input, .stNumberInput>div>div>input {
+            background-color: #000000;
+            color: #FFFFFF;
+            border: 1px solid #FFFFFF;
         }
         
-        /* Alerts/Status Messages */
+        /* ALERTS (Success, Info, Warning) */
         .stAlert {
-            background-color: #1E1E1E;
-            color: white;
-            border-left: 5px solid #CC0633;
+            background-color: #000000; /* Black background */
+            color: #FFFFFF;
+            border: 1px solid #FFFFFF;
+            border-left: 10px solid #CC0633; /* Primary Red accent */
         }
         
-        /* Progress Bar */
+        /* PROGRESS BAR */
         .stProgress > div > div > div > div {
-            background-color: #CC0633;
+            background-color: #000000; /* Black progress fill */
+        }
+        
+        /* DOWNLOAD BUTTON SPECIFIC */
+        [data-testid="stDownloadButton"]>button {
+            background-color: #FFFFFF !important;
+            color: #A6192E !important;
+            border: 2px solid #000000 !important;
         }
         </style>
     """, unsafe_allow_html=True)
@@ -94,11 +119,11 @@ def get_driver():
     Initializes a headless Chrome browser with AGGRESSIVE memory saving options.
     """
     chrome_options = Options()
-    chrome_options.add_argument("--headless=new") # Newer, slightly more efficient headless mode
+    chrome_options.add_argument("--headless=new") 
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
     chrome_options.add_argument("--disable-gpu")
-    chrome_options.add_argument("--disable-features=VizDisplayCompositor") # Disable visual compositor to save RAM
+    chrome_options.add_argument("--disable-features=VizDisplayCompositor") 
     chrome_options.add_argument("--disable-extensions")
     chrome_options.add_argument("--dns-prefetch-disable")
     chrome_options.add_argument("--window-size=1920,1080")
@@ -236,7 +261,7 @@ def parse_single_article(url, session):
 # --- Main UI Layout ---
 st.title("💸 KCI Major Gift Scraper")
 st.markdown("""
-<div style='background-color: #1E1E1E; padding: 15px; border-radius: 10px; border-left: 5px solid #CC0633;'>
+<div style='background-color: #000000; padding: 15px; border-radius: 10px; border: 2px solid #CC0633; color: white;'>
 This tool scrapes <b>Major Gift News</b> from <i>KCI Philanthropy</i>. 
 It uses a headless browser to paginate through the listing and extracts details into an Excel sheet.
 </div>
