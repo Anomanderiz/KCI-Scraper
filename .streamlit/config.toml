@@ -1,1 +1,1 @@
-[theme]primaryColor = "#000000"backgroundColor = "#A6192E"secondaryBackgroundColor = "#CC0633"textColor = "#FFFFFF"font = "sans serif"
+[theme]Primary accent color (focus rings, etc) - Set to White for contrastprimaryColor = "#FFFFFF"Main background color - Secondary RedbackgroundColor = "#A6192E"Sidebar background color - Primary RedsecondaryBackgroundColor = "#CC0633"Text color - WhitetextColor = "#FFFFFF"font = "sans serif"
