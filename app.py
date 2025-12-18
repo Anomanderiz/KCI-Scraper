@@ -20,7 +20,74 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, NoSuchElementException, WebDriverException
 
 # --- Configuration & Setup ---
-st.set_page_config(page_title="KCI Major Gift Scraper", page_icon="🎁", layout="wide")
+st.set_page_config(
+    page_title="KCI Major Gift Scraper", 
+    page_icon="🎁", 
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
+# --- AESTHETICS: Custom CSS Injection ---
+def local_css():
+    st.markdown("""
+        <style>
+        /* Main Background and Text */
+        .stApp {
+            background-color: #0E1117; /* Very dark canvas to let the red pop */
+            color: #FFFFFF;
+            font-family: 'Helvetica Neue', sans-serif;
+        }
+        
+        /* Sidebar Styling */
+        [data-testid="stSidebar"] {
+            background-color: #A6192E; /* Secondary Red */
+        }
+        [data-testid="stSidebar"] .css-17lntkn {
+            color: #FFFFFF;
+        }
+        
+        /* Titles and Headers */
+        h1, h2, h3 {
+            color: #CC0633 !important; /* Primary Red */
+            font-weight: 700;
+        }
+        
+        /* Buttons */
+        .stButton>button {
+            background-color: #CC0633;
+            color: white;
+            border-radius: 8px;
+            border: none;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        .stButton>button:hover {
+            background-color: #FFFFFF;
+            color: #CC0633;
+            border: 2px solid #CC0633;
+            transform: scale(1.02);
+        }
+
+        /* Dataframes */
+        [data-testid="stDataFrame"] {
+            border: 1px solid #A6192E;
+        }
+        
+        /* Alerts/Status Messages */
+        .stAlert {
+            background-color: #1E1E1E;
+            color: white;
+            border-left: 5px solid #CC0633;
+        }
+        
+        /* Progress Bar */
+        .stProgress > div > div > div > div {
+            background-color: #CC0633;
+        }
+        </style>
+    """, unsafe_allow_html=True)
+
+local_css()
 
 def get_driver():
     """
@@ -72,7 +139,6 @@ def get_all_article_urls(driver, max_clicks, status_container):
     
     status_container.text("Analyzing initial page load...")
     
-    # Fail-safe: Stop if we hit a hard limit to prevent infinite loops/crashes
     HARD_LIMIT_CLICKS = 50 
     
     while click_count < max_clicks and click_count < HARD_LIMIT_CLICKS:
@@ -91,7 +157,7 @@ def get_all_article_urls(driver, max_clicks, status_container):
                 break
 
             driver.execute_script("arguments[0].scrollIntoView(true);", view_more_button)
-            time.sleep(1.0) # Increased sleep slightly to be gentler on CPU
+            time.sleep(1.0) 
             view_more_button.click()
             click_count += 1
             
@@ -101,7 +167,6 @@ def get_all_article_urls(driver, max_clicks, status_container):
         except (NoSuchElementException, TimeoutException):
             break
         except Exception as e:
-            # Don't crash the whole app for one pagination error
             status_container.warning(f"Pagination stopped early: {e}")
             break
             
@@ -171,13 +236,15 @@ def parse_single_article(url, session):
 # --- Main UI Layout ---
 st.title("💸 KCI Major Gift Scraper")
 st.markdown("""
-This tool scrapes **Major Gift News** from *KCI Philanthropy*. 
+<div style='background-color: #1E1E1E; padding: 15px; border-radius: 10px; border-left: 5px solid #CC0633;'>
+This tool scrapes <b>Major Gift News</b> from <i>KCI Philanthropy</i>. 
 It uses a headless browser to paginate through the listing and extracts details into an Excel sheet.
-""")
+</div>
+<br>
+""", unsafe_allow_html=True)
 
 with st.sidebar:
-    st.header("Settings")
-    # Decreased default max clicks to prevent initial OOM crash
+    st.header("⚙️ Settings")
     max_clicks = st.number_input("Max 'View More' Clicks", min_value=1, max_value=50, value=2, help="Start small (1-3) to test memory limits.")
     delay = st.number_input("Request Delay (s)", min_value=0.1, value=0.5, step=0.1)
     st.info("The scraping process runs in the cloud. Please stay on this tab while it runs.")
@@ -198,11 +265,10 @@ if st.button("Start Scraping", type="primary"):
         st.error(f"Critical Browser Error: {e}")
         urls = []
     finally:
-        # CRITICAL: Kill the browser immediately to free up RAM for parsing
         if driver:
             driver.quit()
             del driver
-            gc.collect() # Force garbage collection
+            gc.collect() 
             status_area.text("Browser closed. Releasing memory...")
 
     # Phase 2: Requests (Low Memory Usage)
@@ -216,7 +282,6 @@ if st.button("Start Scraping", type="primary"):
         
         all_records = []
         
-        # Create a container for the dataframe so we can update it live
         data_container = st.empty()
         
         for i, url in enumerate(sorted(urls)):
