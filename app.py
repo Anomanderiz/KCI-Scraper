@@ -256,7 +256,7 @@ It paginates through the listing and extracts details into an Excel sheet.
 
 with st.sidebar:
     st.header("⚙️ Settings")
-    max_clicks = st.number_input("Max 'View More' Clicks", min_value=1, max_value=50, value=2, help="1 should be enough for the most recent article.")
+    max_clicks = st.number_input("Max 'View More' Clicks", min_value=1, max_value=50, value=2, help="1 should be enough for the most recent article.\nIncrease to scrape older articles.")
     delay = st.number_input("Request Delay (s)", min_value=0.1, value=0.5, step=0.1)
     st.info("The scraping process runs in the cloud. Please stay on this tab while it runs.")
 
