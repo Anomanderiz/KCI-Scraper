@@ -249,14 +249,14 @@ st.title("💸 KCI Major Gift Scraper")
 st.markdown("""
 <div style='background-color: #000000; padding: 15px; border-radius: 8px; border-left: 5px solid #CC0633; color: white;'>
 This tool scrapes <b>Major Gift News</b> from <i>KCI Philanthropy</i>. 
-It uses a headless browser to paginate through the listing and extracts details into an Excel sheet.
+It paginates through the listing and extracts details into an Excel sheet.
 </div>
 <br>
 """, unsafe_allow_html=True)
 
 with st.sidebar:
     st.header("⚙️ Settings")
-    max_clicks = st.number_input("Max 'View More' Clicks", min_value=1, max_value=50, value=2, help="Start small (1-3) to test memory limits.")
+    max_clicks = st.number_input("Max 'View More' Clicks", min_value=1, max_value=50, value=2, help="1 should be enough for the most recent article.")
     delay = st.number_input("Request Delay (s)", min_value=0.1, value=0.5, step=0.1)
     st.info("The scraping process runs in the cloud. Please stay on this tab while it runs.")
 
