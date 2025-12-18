@@ -31,80 +31,77 @@ st.set_page_config(
 def local_css():
     st.markdown("""
         <style>
-        /* FORCE MAIN BACKGROUND to Secondary Red (#A6192E) */
+        /* MAIN BACKGROUND - Void Black */
         .stApp {
-            background-color: #A6192E !important;
+            background-color: #000000 !important;
             font-family: 'Helvetica Neue', sans-serif;
         }
 
-        /* FORCE SIDEBAR BACKGROUND to Primary Red (#CC0633) */
+        /* SIDEBAR - Slightly lighter black for separation */
         section[data-testid="stSidebar"] {
-            background-color: #CC0633 !important;
-            border-right: 1px solid #FFFFFF;
+            background-color: #0E0E0E !important;
+            border-right: 1px solid #333333;
         }
         
         /* HEADERS - Pure White */
         h1, h2, h3, h4, h5, h6, .stMarkdown {
             color: #FFFFFF !important;
-            font-weight: 800;
         }
         
-        /* TABLES / DATAFRAMES - Primary Red with White Borders */
+        /* DATAFRAMES/TABLES - Black with Red Border */
         [data-testid="stDataFrame"] {
-            background-color: #CC0633 !important;
-            border: 2px solid #FFFFFF;
+            background-color: #000000 !important;
+            border: 1px solid #CC0633;
             border-radius: 5px;
-            padding: 5px;
         }
         
-        /* BUTTONS - White Background, Primary Red Text */
+        /* BUTTONS - Red Background, White Text */
         .stButton>button {
-            background-color: #FFFFFF !important;
-            color: #CC0633 !important;
-            border: none;
-            border-radius: 8px;
-            font-weight: bold;
-            transition: all 0.3s ease;
+            background-color: #CC0633 !important;
+            color: #FFFFFF !important;
+            border: 1px solid #CC0633;
+            border-radius: 4px;
+            font-weight: 600;
+            transition: all 0.2s ease;
         }
         .stButton>button:hover {
-            transform: scale(1.05);
-            box-shadow: 0 4px 15px rgba(255,255,255,0.4);
+            background-color: #A6192E !important; /* Darker red on hover */
+            border-color: #FFFFFF;
+            box-shadow: 0 0 8px rgba(204, 6, 51, 0.6);
         }
 
-        /* INPUT FIELDS - Primary Red Background, White Text, White Border */
+        /* INPUT FIELDS - Dark Grey Background, White Text, Red Focus */
         .stTextInput>div>div>input, .stNumberInput>div>div>input {
-            background-color: #CC0633 !important;
+            background-color: #1A1A1A !important;
             color: #FFFFFF !important;
-            border: 1px solid #FFFFFF !important;
+            border: 1px solid #333333 !important;
         }
-        /* Input Labels */
-        .stTextInput label, .stNumberInput label {
-            color: #FFFFFF !important;
-        }
+        /* Focus state handled by Streamlit theme config below */
         
-        /* ALERTS - Primary Red with White Border */
+        /* ALERTS - Dark with Red Accent */
         .stAlert {
-            background-color: #CC0633 !important;
+            background-color: #1A1A1A !important;
             color: #FFFFFF;
-            border: 1px solid #FFFFFF;
+            border: 1px solid #333333;
+            border-left: 4px solid #CC0633 !important;
         }
         
-        /* PROGRESS BAR - White Fill */
+        /* PROGRESS BAR - The Requested Red */
         .stProgress > div > div > div > div {
-            background-color: #FFFFFF !important;
-        }
-        
-        /* DOWNLOAD BUTTON Override */
-        [data-testid="stDownloadButton"]>button {
-            background-color: #FFFFFF !important;
-            color: #A6192E !important;
-        }
-        
-        /* STATUS MESSAGES (Success, Error containers) */
-        [data-testid="stNotification"] {
             background-color: #CC0633 !important;
-            color: white !important;
-            border: 1px solid white;
+        }
+        
+        /* DOWNLOAD BUTTON SPECIFIC */
+        [data-testid="stDownloadButton"]>button {
+            background-color: #1A1A1A !important;
+            color: #CC0633 !important;
+            border: 1px solid #CC0633 !important;
+        }
+        
+        /* STATUS NOTIFICATIONS */
+        [data-testid="stNotification"] {
+            background-color: #1A1A1A !important;
+            border: 1px solid #CC0633;
         }
         </style>
     """, unsafe_allow_html=True)
@@ -250,7 +247,7 @@ def parse_single_article(url, session):
 # --- Main UI Layout ---
 st.title("💸 KCI Major Gift Scraper")
 st.markdown("""
-<div style='background-color: #CC0633; padding: 15px; border-radius: 10px; border: 2px solid white; color: white;'>
+<div style='background-color: #000000; padding: 15px; border-radius: 8px; border-left: 5px solid #CC0633; color: white;'>
 This tool scrapes <b>Major Gift News</b> from <i>KCI Philanthropy</i>. 
 It uses a headless browser to paginate through the listing and extracts details into an Excel sheet.
 </div>
