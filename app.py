@@ -7,6 +7,7 @@ from urllib.parse import urljoin
 from bs4 import BeautifulSoup
 import re
 from io import BytesIO
+import shutil
 
 # --- Selenium Imports ---
 from selenium import webdriver
@@ -15,15 +16,16 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException, NoSuchElementException
+from selenium.common.exceptions import TimeoutException, NoSuchElementException, WebDriverException
 
 # --- Configuration & Setup ---
 st.set_page_config(page_title="KCI Major Gift Scraper", page_icon="🎁", layout="wide")
 
 def get_driver():
     """
-    Initializes a headless Chrome browser optimized for containerized environments
-    like Streamlit Cloud.
+    Initializes a headless Chrome browser. 
+    CRITICAL FIX: Forces usage of the system-installed Chromium to avoid 
+    Selenium Manager downloading incompatible drivers (Error 127).
     """
     chrome_options = Options()
     chrome_options.add_argument("--headless")
@@ -31,11 +33,25 @@ def get_driver():
     chrome_options.add_argument("--disable-dev-shm-usage")
     chrome_options.add_argument("--disable-gpu")
     chrome_options.add_argument("--window-size=1920,1080")
-    # This user agent mimics a real user to avoid immediate detection
     chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
     
-    # Streamlit Cloud specific driver loading
-    return webdriver.Chrome(options=chrome_options)
+    # LOCATE CHROMIUM BINARY
+    # We explicitly look for the system binary to prevent Selenium from looking for a standard Chrome installation.
+    chromium_path = shutil.which("chromium") or shutil.which("chromium-browser") or "/usr/bin/chromium"
+    if os.path.exists(chromium_path):
+        chrome_options.binary_location = chromium_path
+    
+    # LOCATE CHROMEDRIVER
+    # We explicitly use the system driver. If we don't do this, Selenium Manager 
+    # will download a new driver (v143+) that is incompatible with the system libraries (Error 127).
+    driver_path = shutil.which("chromedriver") or "/usr/bin/chromedriver"
+    
+    if os.path.exists(driver_path):
+        service = Service(driver_path)
+        return webdriver.Chrome(service=service, options=chrome_options)
+    else:
+        # Fallback: If system driver is missing, let Selenium try its best (may fail)
+        return webdriver.Chrome(options=chrome_options)
 
 def get_all_article_urls(driver, max_clicks, status_container):
     """
@@ -48,12 +64,15 @@ def get_all_article_urls(driver, max_clicks, status_container):
     full_url = f"{DOMAIN}{LISTING_PATH}?{LISTING_PARAMS}"
     
     status_container.info(f"Navigating to {full_url}...")
-    driver.get(full_url)
+    try:
+        driver.get(full_url)
+    except WebDriverException as e:
+        st.error(f"Browser crash on initial load: {e}")
+        return []
     
     all_urls = set()
     click_count = 0
     
-    # Initial load
     status_container.text("Analyzing initial page load...")
     
     while click_count < max_clicks:
@@ -69,20 +88,16 @@ def get_all_article_urls(driver, max_clicks, status_container):
         status_container.text(f"Collected {len(all_urls)} unique articles so far...")
 
         try:
-            # Locate the "View More" button
             view_more_button = driver.find_element(By.CLASS_NAME, "fwp-load-more")
             
-            # Check visibility
             if not view_more_button.is_displayed():
                 break
 
-            # Scroll and Click
             driver.execute_script("arguments[0].scrollIntoView(true);", view_more_button)
             time.sleep(0.5) 
             view_more_button.click()
             click_count += 1
             
-            # Wait for the loading spinner to appear and then disappear
             wait = WebDriverWait(driver, 10)
             wait.until(EC.invisibility_of_element_located((By.CSS_SELECTOR, ".facetwp-loading")))
             
@@ -104,17 +119,13 @@ def parse_single_article(url, session):
         soup = BeautifulSoup(r.text, "html.parser")
         
         records = []
-        # Find the main article content
         main_content = soup.find("article") or soup.find("main") or soup
 
-        # Logic: Find H2 tags (Donors) and parse the content between them
         for h2 in main_content.find_all('h2'):
             donor = h2.get_text(strip=True)
-            # Filter out boilerplate headers
             if not donor or "submissions notice" in donor.lower():
                 continue
 
-            # Gather siblings until the next H2
             content_block = []
             for sibling in h2.find_next_siblings():
                 if sibling.name == 'h2':
@@ -123,12 +134,10 @@ def parse_single_article(url, session):
             
             if not content_block: continue
 
-            # Extract details
             info = {"Donor": donor, "Gift": "", "Recipient": "", "City": "", "Province": "", "Date": "", "Description": "", "Source URL": url}
             block_soup = BeautifulSoup("".join(str(s) for s in content_block), "html.parser")
             block_text = block_soup.get_text(separator="\n", strip=True)
 
-            # Extract fields labeled with H3 (e.g. Recipient: ...)
             for h3 in block_soup.find_all('h3'):
                 label = h3.get_text(strip=True).replace(":", "")
                 if label in info:
@@ -136,24 +145,20 @@ def parse_single_article(url, session):
                     if next_elem:
                         info[label] = next_elem.get_text(strip=True)
 
-            # Extract Date from H6
             date_tag = block_soup.find('h6')
             if date_tag:
                 info["Date"] = date_tag.get_text(strip=True)
             
-            # Regex for money
             gift_pattern = re.compile(r'\$\d[\d,.]*\s*(million|billion|thousand)?', re.IGNORECASE)
             gift_match = gift_pattern.search(block_text)
             if gift_match:
                 info["Gift"] = gift_match.group(0)
 
-            # Clean up description
             description_text = block_text
             for key, value in info.items():
                 if value and key != "Source URL":
                     description_text = description_text.replace(value, "")
             
-            # Remove labels like "Recipient:" from the description text
             for label in ["Recipient", "City", "Province", "Date", "Gift"]:
                  description_text = re.sub(f'^{label}:', '', description_text, flags=re.MULTILINE | re.IGNORECASE).strip()
 
@@ -183,49 +188,39 @@ if st.button("Start Scraping", type="primary"):
     progress_bar = st.progress(0)
     
     try:
-        # 1. Initialize Browser
         driver = get_driver()
         
-        # 2. Get URLs
         urls = get_all_article_urls(driver, max_clicks, status_area)
-        driver.quit() # Close browser to save memory
+        driver.quit()
         
         if not urls:
             status_area.error("No articles found.")
         else:
             status_area.success(f"Found {len(urls)} articles. Beginning detailed extraction...")
             
-            # 3. Parse Articles
             session = requests.Session()
             session.headers.update({"User-Agent": "Mozilla/5.0 ..."})
             
             all_records = []
             
-            results_placeholder = st.empty()
-            
             for i, url in enumerate(sorted(urls)):
                 records = parse_single_article(url, session)
                 all_records.extend(records)
                 
-                # Update progress
                 progress = (i + 1) / len(urls)
                 progress_bar.progress(progress)
                 status_area.text(f"Processing {i+1}/{len(urls)}: {url.split('/')[-2]}")
                 time.sleep(delay)
             
-            # 4. Final Output
             progress_bar.empty()
             if all_records:
                 df = pd.DataFrame(all_records)
-                
-                # Reorder columns nicely
                 cols = ["Donor", "Gift", "Recipient", "City", "Province", "Date", "Description", "Source URL"]
                 df = df[[c for c in cols if c in df.columns]]
                 
                 status_area.success(f"✅ Scraping Complete! {len(all_records)} gifts found.")
                 st.dataframe(df)
                 
-                # Convert to Excel for download
                 buffer = BytesIO()
                 with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
                     df.to_excel(writer, index=False, sheet_name='Sheet1')
