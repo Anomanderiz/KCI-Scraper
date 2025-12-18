@@ -1,1 +1,7 @@
-streamlitseleniumbeautifulsoup4pandasopenpyxlxlsxwriterrequests
+streamlit
+selenium
+beautifulsoup4
+pandas
+openpyxl
+xlsxwriter
+requests
