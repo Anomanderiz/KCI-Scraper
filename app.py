@@ -31,83 +31,80 @@ st.set_page_config(
 def local_css():
     st.markdown("""
         <style>
-        /* GLOBAL FONTS */
+        /* FORCE MAIN BACKGROUND to Secondary Red (#A6192E) */
         .stApp {
+            background-color: #A6192E !important;
             font-family: 'Helvetica Neue', sans-serif;
         }
 
-        /* SIDEBAR styling overrides */
-        [data-testid="stSidebar"] {
-            background-color: #CC0633 !important; /* Primary Red */
-            border-right: 2px solid #000000;
+        /* FORCE SIDEBAR BACKGROUND to Primary Red (#CC0633) */
+        section[data-testid="stSidebar"] {
+            background-color: #CC0633 !important;
+            border-right: 1px solid #FFFFFF;
         }
         
-        /* MAIN AREA styling overrides */
-        .stApp > header {
-            background-color: transparent;
-        }
-        
-        /* HEADERS */
-        h1, h2, h3, h4, h5, h6 {
+        /* HEADERS - Pure White */
+        h1, h2, h3, h4, h5, h6, .stMarkdown {
             color: #FFFFFF !important;
-            text-shadow: 2px 2px 0px #000000; /* Black shadow for clarity */
             font-weight: 800;
         }
         
-        /* TABLES / DATAFRAMES */
+        /* TABLES / DATAFRAMES - Primary Red with White Borders */
         [data-testid="stDataFrame"] {
-            background-color: #CC0633 !important; /* Primary Red */
-            border: 2px solid #000000;
+            background-color: #CC0633 !important;
+            border: 2px solid #FFFFFF;
             border-radius: 5px;
             padding: 5px;
         }
-        [data-testid="stDataFrame"] div[role="grid"] {
-            background-color: #CC0633;
-            color: white;
-        }
         
-        /* BUTTONS */
+        /* BUTTONS - White Background, Primary Red Text */
         .stButton>button {
-            background-color: #000000; /* Black for clarity */
-            color: #CC0633; /* Primary Red text */
-            border: 2px solid #FFFFFF;
+            background-color: #FFFFFF !important;
+            color: #CC0633 !important;
+            border: none;
             border-radius: 8px;
             font-weight: bold;
             transition: all 0.3s ease;
         }
         .stButton>button:hover {
-            background-color: #FFFFFF;
-            color: #CC0633;
-            border-color: #000000;
-            box-shadow: 0 0 10px #000000;
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(255,255,255,0.4);
         }
 
-        /* INPUT FIELDS (Text inputs, Number inputs) */
-        /* Make them Black so they are readable against the Red */
+        /* INPUT FIELDS - Primary Red Background, White Text, White Border */
         .stTextInput>div>div>input, .stNumberInput>div>div>input {
-            background-color: #000000;
-            color: #FFFFFF;
-            border: 1px solid #FFFFFF;
+            background-color: #CC0633 !important;
+            color: #FFFFFF !important;
+            border: 1px solid #FFFFFF !important;
+        }
+        /* Input Labels */
+        .stTextInput label, .stNumberInput label {
+            color: #FFFFFF !important;
         }
         
-        /* ALERTS (Success, Info, Warning) */
+        /* ALERTS - Primary Red with White Border */
         .stAlert {
-            background-color: #000000; /* Black background */
+            background-color: #CC0633 !important;
             color: #FFFFFF;
             border: 1px solid #FFFFFF;
-            border-left: 10px solid #CC0633; /* Primary Red accent */
         }
         
-        /* PROGRESS BAR */
+        /* PROGRESS BAR - White Fill */
         .stProgress > div > div > div > div {
-            background-color: #000000; /* Black progress fill */
+            background-color: #FFFFFF !important;
         }
         
-        /* DOWNLOAD BUTTON SPECIFIC */
+        /* DOWNLOAD BUTTON Override */
         [data-testid="stDownloadButton"]>button {
             background-color: #FFFFFF !important;
             color: #A6192E !important;
-            border: 2px solid #000000 !important;
+        }
+        
+        /* STATUS MESSAGES (Success, Error containers) */
+        [data-testid="stNotification"] {
+            background-color: #CC0633 !important;
+            color: white !important;
+            border: 1px solid white;
         }
         </style>
     """, unsafe_allow_html=True)
@@ -129,12 +126,10 @@ def get_driver():
     chrome_options.add_argument("--window-size=1920,1080")
     chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
     
-    # LOCATE CHROMIUM BINARY
     chromium_path = shutil.which("chromium") or shutil.which("chromium-browser") or "/usr/bin/chromium"
     if os.path.exists(chromium_path):
         chrome_options.binary_location = chromium_path
     
-    # LOCATE CHROMEDRIVER
     driver_path = shutil.which("chromedriver") or "/usr/bin/chromedriver"
     
     if os.path.exists(driver_path):
@@ -144,9 +139,6 @@ def get_driver():
         return webdriver.Chrome(options=chrome_options)
 
 def get_all_article_urls(driver, max_clicks, status_container):
-    """
-    Navigates the KCI listing page and clicks 'View More'.
-    """
     DOMAIN = "https://kciphilanthropy.com"
     LISTING_PATH = "/insights/"
     LISTING_PARAMS = "fwp_categories=major-gift-news"
@@ -198,9 +190,6 @@ def get_all_article_urls(driver, max_clicks, status_container):
     return list(all_urls)
 
 def parse_single_article(url, session):
-    """
-    Extracts donor info from a single article URL.
-    """
     try:
         r = session.get(url, timeout=10)
         r.raise_for_status()
@@ -261,7 +250,7 @@ def parse_single_article(url, session):
 # --- Main UI Layout ---
 st.title("💸 KCI Major Gift Scraper")
 st.markdown("""
-<div style='background-color: #000000; padding: 15px; border-radius: 10px; border: 2px solid #CC0633; color: white;'>
+<div style='background-color: #CC0633; padding: 15px; border-radius: 10px; border: 2px solid white; color: white;'>
 This tool scrapes <b>Major Gift News</b> from <i>KCI Philanthropy</i>. 
 It uses a headless browser to paginate through the listing and extracts details into an Excel sheet.
 </div>
@@ -280,7 +269,7 @@ if st.button("Start Scraping", type="primary"):
     driver = None
     
     try:
-        # Phase 1: Selenium (High Memory Usage)
+        # Phase 1: Selenium
         status_area.info("Starting Browser... (This may take a moment)")
         driver = get_driver()
         
@@ -296,7 +285,7 @@ if st.button("Start Scraping", type="primary"):
             gc.collect() 
             status_area.text("Browser closed. Releasing memory...")
 
-    # Phase 2: Requests (Low Memory Usage)
+    # Phase 2: Requests
     if not urls:
         status_area.warning("No articles found or browser crashed before finding any.")
     else:
@@ -306,7 +295,6 @@ if st.button("Start Scraping", type="primary"):
         session.headers.update({"User-Agent": "Mozilla/5.0 ..."})
         
         all_records = []
-        
         data_container = st.empty()
         
         for i, url in enumerate(sorted(urls)):
